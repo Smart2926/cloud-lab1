@@ -35,9 +35,15 @@ app = FastAPI(
 )
 
 
+
 @app.get("/")
 def home():
-    return {"message": "Music Library API is running"}
+    return {
+        "message": "Music Library API v2 deployed automatically",
+        "deployment": "GitHub Actions",
+        "version": "2.0.0"
+    }
+
 
 
 @app.get("/health")
