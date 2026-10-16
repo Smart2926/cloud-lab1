@@ -1,0 +1,14 @@
+.git
+.github
+terraform
+.env
+.env.*
+!.env.example
+**/__pycache__
+**/*.pyc
+.venv
+.vscode
+README.md
+*.tfstate
+*.tfstate.*
+*.tfvars
