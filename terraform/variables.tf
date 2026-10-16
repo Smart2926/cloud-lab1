@@ -53,3 +53,16 @@ variable "github_repository" {
   type        = string
 }
 
+
+variable "jwt_secret_key" {
+  description = "JWT signing secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "registration_code" {
+  description = "Code required for user registration"
+  type        = string
+  sensitive   = true
+}
+

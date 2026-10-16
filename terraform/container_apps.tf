@@ -75,6 +75,16 @@ resource "azurerm_container_app" "music" {
     value = var.db_admin_password
   }
 
+  secret {
+    name  = "jwt-secret"
+    value = var.jwt_secret_key
+  }
+
+  secret {
+    name  = "registration-code"
+    value = var.registration_code
+  }
+
   template {
     min_replicas = 0
     max_replicas = 1
@@ -116,6 +126,17 @@ resource "azurerm_container_app" "music" {
         name  = "DB_NAME"
         value = azurerm_postgresql_flexible_server_database.music.name
       }
+
+      env {
+        name        = "JWT_SECRET_KEY"
+        secret_name = "jwt-secret"
+      }
+
+      env {
+        name        = "REGISTRATION_CODE"
+        secret_name = "registration-code"
+      }
+
     }
   }
 

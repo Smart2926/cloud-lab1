@@ -6,7 +6,9 @@ from sqlalchemy import select, text
 from sqlalchemy.orm import Session
 
 from app.database import Base, engine, get_db
-from app.models import Song
+from app.models import Song, User
+from app.auth import router as auth_router, require_user
+
 
 
 class SongCreate(BaseModel):
@@ -34,7 +36,7 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-
+app.include_router(auth_router)
 
 @app.get("/")
 def home():
@@ -85,8 +87,10 @@ def get_song(
 )
 def create_song(
     song: SongCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_user),
 ):
+
     new_song = Song(**song.model_dump())
 
     db.add(new_song)
@@ -99,8 +103,10 @@ def create_song(
 @app.delete("/songs/{song_id}")
 def delete_song(
     song_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    _user: User = Depends(require_user),
 ):
+
     song = db.get(Song, song_id)
 
     if not song:
