@@ -9,6 +9,11 @@ from app.database import Base, engine, get_db
 from app.models import Song, User
 from app.auth import router as auth_router, require_user
 
+from app.cache import (
+    get_cached_songs,
+    save_cached_songs,
+    get_cache_stats,
+)
 
 
 class SongCreate(BaseModel):
@@ -59,9 +64,28 @@ def health(db: Session = Depends(get_db)):
 
 @app.get("/songs", response_model=list[SongResponse])
 def get_songs(db: Session = Depends(get_db)):
-    return db.scalars(
+
+    cached_songs = get_cached_songs()
+
+    if cached_songs is not None:
+        return cached_songs
+
+    songs = db.scalars(
         select(Song).order_by(Song.id)
     ).all()
+
+    result = [
+        SongResponse.model_validate(song).model_dump()
+        for song in songs
+    ]
+
+    save_cached_songs(result)
+
+    return result
+
+@app.get("/cache/stats")
+def cache_stats():
+    return get_cache_stats()
 
 
 @app.get("/songs/{song_id}", response_model=SongResponse)
