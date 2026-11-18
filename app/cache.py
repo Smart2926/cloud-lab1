@@ -96,3 +96,12 @@ def get_cache_stats():
             "redis_connected": False,
             "error": "Redis unavailable",
         }
+
+def invalidate_songs_cache():
+    if redis_client is None:
+        return
+
+    try:
+        redis_client.delete(CACHE_KEY)
+    except redis.RedisError as error:
+        logging.warning("Redis invalidation error: %s", error)

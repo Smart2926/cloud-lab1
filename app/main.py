@@ -120,6 +120,7 @@ def create_song(
     db.add(new_song)
     db.commit()
     db.refresh(new_song)
+    invalidate_songs_cache()
 
     return new_song
 
@@ -141,7 +142,15 @@ def delete_song(
 
     db.delete(song)
     db.commit()
+    invalidate_songs_cache()
 
     return {
         "message": "Song deleted successfully"
     }
+
+from app.cache import (
+    get_cached_songs,
+    save_cached_songs,
+    get_cache_stats,
+    invalidate_songs_cache,
+)
