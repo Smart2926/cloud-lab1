@@ -19,7 +19,7 @@ resource "azurerm_container_app_environment" "music" {
 
   infrastructure_subnet_id = azurerm_subnet.containers.id
 
-  internal_load_balancer_enabled = false
+  internal_load_balancer_enabled = true
   zone_redundancy_enabled        = false
 
 
@@ -36,7 +36,7 @@ resource "azurerm_container_app_environment" "music" {
 
 resource "azurerm_user_assigned_identity" "music" {
   name                = "id-music-api"
-  location            = azurerm_virtual_network.lab.location
+  location            = azurerm_container_registry.music.location
   resource_group_name = azurerm_resource_group.lab.name
 }
 
@@ -56,7 +56,8 @@ resource "azurerm_container_app" "music" {
   resource_group_name          = azurerm_resource_group.lab.name
   container_app_environment_id = azurerm_container_app_environment.music.id
 
-  revision_mode = "Single"
+  revision_mode         = "Single"
+  workload_profile_name = "Consumption"
 
   identity {
     type = "UserAssigned"
@@ -85,9 +86,37 @@ resource "azurerm_container_app" "music" {
     value = var.registration_code
   }
 
+  secret {
+    name  = "redis-password"
+    value = azurerm_managed_redis.music.default_database[0].primary_access_key
+  }
+
+  secret {
+    name  = "servicebus-send"
+    value = azurerm_servicebus_queue_authorization_rule.api_sender.primary_connection_string
+  }
+
   template {
-    min_replicas = 0
-    max_replicas = 1
+    min_replicas               = 1
+    max_replicas               = 3
+    cooldown_period_in_seconds = 300
+
+    http_scale_rule {
+      name                = "http-autoscaling"
+      concurrent_requests = "10"
+    }
+
+    custom_scale_rule {
+      name             = "daytime-schedule"
+      custom_rule_type = "cron"
+
+      metadata = {
+        timezone        = "Europe/Kyiv"
+        start           = "0 8 * * *"
+        end             = "0 22 * * *"
+        desiredReplicas = "2"
+      }
+    }
 
     container {
       name = "music-api"
@@ -135,6 +164,41 @@ resource "azurerm_container_app" "music" {
       env {
         name        = "REGISTRATION_CODE"
         secret_name = "registration-code"
+      }
+
+      env {
+        name  = "REDIS_HOST"
+        value = azurerm_managed_redis.music.hostname
+      }
+
+      env {
+        name  = "REDIS_PORT"
+        value = "10000"
+      }
+
+      env {
+        name        = "REDIS_PASSWORD"
+        secret_name = "redis-password"
+      }
+
+      env {
+        name  = "CACHE_TTL"
+        value = "60"
+      }
+
+      env {
+        name  = "CACHE_ENABLED"
+        value = tostring(var.cache_enabled)
+      }
+
+      env {
+        name        = "SERVICEBUS_SEND_CONNECTION_STRING"
+        secret_name = "servicebus-send"
+      }
+
+      env {
+        name  = "SERVICEBUS_QUEUE_NAME"
+        value = azurerm_servicebus_queue.music_tasks.name
       }
 
     }

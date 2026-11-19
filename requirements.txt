@@ -6,3 +6,4 @@ PyJWT==2.10.1
 pwdlib[argon2]==0.2.1
 python-multipart==0.0.20
 redis==6.4.0
+azure-servicebus==7.15.0

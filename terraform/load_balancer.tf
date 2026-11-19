@@ -17,31 +17,14 @@ resource "azurerm_subnet" "appgateway" {
 }
 
 
-resource "azurerm_private_endpoint" "containerapps" {
-  name                = "pe-music-containerapps"
-  location            = azurerm_virtual_network.lab.location
-  resource_group_name = azurerm_resource_group.lab.name
 
-  subnet_id = azurerm_subnet.private_endpoint.id
-
-  private_service_connection {
-    name = "psc-music-containerapps"
-
-    private_connection_resource_id = (
-      azurerm_container_app_environment.music.id
-    )
-
-    subresource_names    = ["managedEnvironments"]
-    is_manual_connection = false
-  }
-}
 
 
 resource "azurerm_private_dns_zone" "containerapps" {
-  name = "privatelink.polandcentral.azurecontainerapps.io"
-
+  name                = azurerm_container_app_environment.music.default_domain
   resource_group_name = azurerm_resource_group.lab.name
 }
+
 
 resource "azurerm_private_dns_zone_virtual_network_link" "containerapps" {
   name                = "containerapps-vnet-link"
@@ -52,17 +35,13 @@ resource "azurerm_private_dns_zone_virtual_network_link" "containerapps" {
 }
 
 resource "azurerm_private_dns_a_record" "containerapps" {
-  name = split(
-    ".",
-    azurerm_container_app_environment.music.default_domain
-  )[0]
-
+  name                = "*"
   private_dns_zone_id = azurerm_private_dns_zone.containerapps.id
 
   ttl = 300
 
   records = [
-    azurerm_private_endpoint.containerapps.private_service_connection[0].private_ip_address
+    azurerm_container_app_environment.music.static_ip_address
   ]
 }
 

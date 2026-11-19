@@ -239,3 +239,33 @@ output "monitoring_workbook_id" {
   description = "Azure Monitor Workbook resource ID"
   value       = azurerm_application_insights_workbook.music.id
 }
+
+resource "azurerm_monitor_metric_alert" "max_replicas" {
+  name                = "alert-music-max-replicas"
+  resource_group_name = azurerm_resource_group.lab.name
+
+  scopes = [
+    azurerm_container_app.music.id
+  ]
+
+  description = "Alert when Music API reaches maximum replicas"
+
+  severity      = 2
+  enabled       = true
+  auto_mitigate = true
+
+  frequency   = "PT1M"
+  window_size = "PT1M"
+
+  criteria {
+    metric_namespace = "Microsoft.App/containerApps"
+    metric_name      = "Replicas"
+    aggregation      = "Maximum"
+    operator         = "GreaterThan"
+    threshold        = 2
+  }
+
+  action {
+    action_group_id = azurerm_monitor_action_group.music.id
+  }
+}

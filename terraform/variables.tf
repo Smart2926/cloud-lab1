@@ -66,3 +66,13 @@ variable "registration_code" {
   sensitive   = true
 }
 
+variable "deployment_location" {
+  description = "Azure region for application infrastructure"
+  type        = string
+}
+
+variable "cache_enabled" {
+  description = "Enable or disable Redis caching"
+  type        = bool
+  default     = true
+}

@@ -1,6 +1,6 @@
 resource "azurerm_user_assigned_identity" "github" {
   name                = "id-github-music-deploy"
-  location            = azurerm_virtual_network.lab.location
+  location            = azurerm_container_registry.music.location
   resource_group_name = azurerm_resource_group.lab.name
 
   tags = {
